@@ -6,7 +6,10 @@ use App\Traits\ApiResponser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
+use GuzzleHttp\Exception\ClientException;
+
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
 use Laravel\Lumen\Exceptions\Handler as ExceptionHandler;
@@ -88,9 +91,23 @@ class Handler extends ExceptionHandler
         // unauthorized access
         if ($exception instanceof AuthenticationException) 
         {
-            return $this->errorResponse($exception->getMessage(), Response::HTTP_UNAUTHORIZED);
+
+            $data = [
+                'data' => ['error' => 'Unauthorized',
+                'code' => 401],
+                'site' => 'gateway'
+            ];
+            
+            return $this->errorMessage($data, 401);
         }
 
+        if ($exception instanceof ClientException) {
+            $message = $exception->getResponse()->getBody();
+            $code = $exception->getCode();
+            
+            return $this->errorMessage($message,200);
+        }
+        
         // if your are running in development environment
         if (env('APP_DEBUG', false))  
         {

@@ -17,19 +17,28 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
-$router->group(['prefix' => 's1'], function($router) {
-    $router->get('/users', 'User1Controller@showUsers');
-    $router->get('/users/{id}', 'User1Controller@showUser');
-    $router->delete('/users/{id}', 'User1Controller@deleteUser');
-    $router->post('/users', 'User1Controller@createUser');
-    $router->patch('/users/{id}', 'User1Controller@patchUser');
-});
+$router->group(['middleware' => 'client.credentials'], function() use ($router){
+    
+    $router->group(['prefix' => 's1'], function($router) {
+        $router->get('/users', 'User1Controller@index');
+        $router->get('/users/{id}', 'User1Controller@show');
+        $router->post('/users', 'User1Controller@add');
+        $router->patch('/users/{id}', 'User1Controller@edit');
+        $router->delete('/users/{id}', 'User1Controller@delete');
+
+        $router->get('/userjob','UserJob1Controller@index');           
+        $router->get('/userjob/{id}','UserJob1Controller@show');            
+    });
 
 
-$router->group(['prefix' => 's2'], function($router) {
-    $router->get('/users', 'User2Controller@showUsers');
-    $router->get('/users/{id}', 'User2Controller@showUser');
-    $router->delete('/users/{id}', 'User2Controller@deleteUser');
-    $router->post('/users', 'User2Controller@createUser');
-    $router->patch('/users/{id}', 'User2Controller@patchUser');
+    $router->group(['prefix' => 's2'], function($router) {
+        $router->get('/users', 'User2Controller@index');
+        $router->get('/users/{id}', 'User2Controller@show');
+        $router->post('/users', 'User2Controller@add');
+        $router->patch('/users/{id}', 'User2Controller@edit');
+        $router->delete('/users/{id}', 'User2Controller@delete');
+
+        $router->get('/userjob','UserJob2Controller@index');             
+        $router->get('/userjob/{id}','UserJob2Controller@show');            
+    });
 });

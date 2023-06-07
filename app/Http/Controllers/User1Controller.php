@@ -2,48 +2,55 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\User1Service;
+use App\Services\User2Service;
+use App\Traits\ApiResponser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use App\Traits\ApiResponser;
-use App\Services\siteService;
 
 class User1Controller extends Controller
 {
      use ApiResponser;
 
-    /**
-     * Create a new controller instance.
-     *
-     * @var siteService
-     */
+     public $User1Service;
+     public $User2Service;
 
-     public $siteService;
-
-    public function __construct(siteService $siteService)
-    {
-        $this->siteService = $siteService;
+    public function __construct(User1Service $User1Service, User2Service $User2Service) {
+        $this->User1Service = $User1Service;
+        $this->User2Service = $User2Service;
     }
 
-
-    public function showUsers() 
-    {
-        return $this->successResponse($this->siteService->show());
+    public function index() {
+        return $this->successResponse($this->User1Service->obtainUsers());
     }
 
-    public function showUser($id) 
-    {
-        return $this->successResponse($this->siteService->showUser($id));
+    public function show($id) {
+        return $this->successResponse($this->User1Service->obtainUser1($id));
     }
 
-    public function createUser(Request $request) {
-        return $this->successResponse($this->siteService->addUser($request->all()));
+    public function add(Request $request) {
+        if ($request->jobid <= 5)
+        {
+            $this->User2Service->obtainUserJob2($request->jobid);
+        }
+        else
+        {
+            $this->User1Service->obtainUserJob1($request->jobid);
+        }
+
+        return $this->successResponse($this->User1Service->createUser($request->all(), Response::HTTP_CREATED));
+
+        // $user = [];
+        // $user = $this->User1Service->addUser1($request->all());
+    
+        // return $this->successResponse($user);
+    }
+
+    public function edit(Request $data, $id) {
+        return $this->successResponse($this->User1Service->updateUser1($data->all(), $id));
     }
     
-    public function deleteUser($id) {
-        return $this->successResponse($this->siteService->deleteUser($id));
-    }
-
-    public function patchUser(Request $data, $id) {
-        return $this->successResponse($this->siteService->updateUser($data->all(), $id));
+    public function delete($id) {
+        return $this->successResponse($this->User1Service->deleteUser1($id));
     }
 }

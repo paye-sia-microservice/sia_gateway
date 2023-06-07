@@ -1,29 +1,52 @@
 <?php
 
-
 namespace App\Traits;
-// importing guzzle
+
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
+trait ConsumesExternalService
+{
+    public function performRequest($method, $requestUrl, $form_params = [], $headers = [])
+    {
+        $client = new Client([
+            'base_uri' => $this->baseUri,
+        ]);
 
-trait ConsumesExternalService {
+        if(isset($this->secret)) {
+            $headers['Authorization'] = $this->secret;
+        }
 
-     /**
-      *@return string
-     */
+        try {
+            $response = $client->request($method, $requestUrl, [
+                'form_params' => $form_params,
+                'headers' => $headers,
+            ]);
 
-     public function performRequest($method, $requestUrl, $form_params =[], $headers =[]) {
+            return $response->getBody()->getContents();
+        } catch (RequestException $e) {
+            if ($e->hasResponse()) {
+                $responseBody = $e->getResponse()->getBody()->getContents();
+                $responseData = json_decode($responseBody, true);
 
-          $client = new Client([
-               'base_uri' => $this->baseUri,
-          ]);
+                // Check if the error data is an array
+                if (is_array($responseData) && isset($responseData['error'])) {
+                    $errorData = [
+                        'message' => $responseData['error'],
+                        'error number' => $responseData['code'],
+                        'site' => $responseData['site'],
+                    ];
 
-          $response = $client->request($method, $requestUrl, [
-               'form_params' => $form_params,
-               'headers' => $headers
-          ]);
+                    // Convert the error data to JSON string
+                    return json_encode($errorData);
+                }
 
-          return $response->getBody()->getContents();
-     }
+                // If error data is not an array, return as a single error message
+                return $responseData;
+            }
 
+            // Re-throw the exception if there is no response
+            throw $e;
+        }
+    }
 }
